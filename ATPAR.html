@@ -227,6 +227,16 @@
   }
   .callout p { margin: 0; font-size: 14.5px; color: var(--text); }
 
+  .usecase-grid { grid-template-columns: repeat(3, 1fr); }
+  .usecase-tile .usecase-title {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--accent-strong);
+    display: block;
+    margin-bottom: 8px;
+  }
+  .usecase-tile .usecase-body { font-size: 13.5px; color: var(--text-muted); }
+
   .tags { display: flex; flex-wrap: wrap; gap: 8px; }
   .tag {
     font-family: 'JetBrains Mono', monospace;
@@ -268,7 +278,7 @@
   <section>
     <h2>The problem</h2>
     <p class="lede">Performance testing at scale meant coordinating infrastructure provisioning, realistic data setup, load generation, and metrics collection across five separate tools — by hand, before every release.</p>
-    <p>That process took days, depended on whoever ran it, and produced results that were hard to compare from one release to the next. There was no consistent, one-view answer to "did this release get slower, and why?"</p>
+    <p>That process took days, depended on whoever ran it, and produced results that were hard to compare from one release to the next. A load run itself might finish in 10 minutes — but manually correlating infra, trace, and log signals afterward to explain <em>why</em> an API got slower routinely took up to three days, with no consistent, one-view answer along the way.</p>
   </section>
 
   <section>
@@ -277,7 +287,7 @@
     <figure class="diagram">
       <p class="diagram-hint">↔ swipe to see the full diagram</p>
       <div class="diagram-scroll">
-        <svg viewBox="0 0 1400 420" role="img" aria-label="Flow diagram: Provision Infra leads to Data Snapshot Check, then Load Simulation with JMeter, which fans out to parallel collection from AWS, Datadog, and Splunk, converging into Consolidation with JTL Reporter, then Benchmark Comparison, which fans out to a Dashboard and an Emailable Report.">
+        <svg viewBox="0 0 1400 420" role="img" aria-label="Flow diagram: Provision Infra fans out to Data Snapshot Check and Dynamic Load Config, which converge into Load Simulation with JMeter. Load Simulation fans out to parallel collection from AWS, Datadog, and Splunk, converging into Consolidation with JTL Reporter, then Benchmark Comparison, which fans out to a Dashboard and an Emailable Report.">
           <defs>
             <marker id="arrow-atpar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
               <path d="M0,0 L10,5 L0,10 z" fill="var(--border-strong)"></path>
@@ -301,6 +311,15 @@
             <!-- Icon: bolt / load -->
             <g id="icon-bolt">
               <polygon points="11,1 3,12 9,12 8,19 17,7 10.5,7" class="icon-fill"></polygon>
+            </g>
+            <!-- Icon: sliders / dynamic config -->
+            <g id="icon-sliders">
+              <line x1="4" y1="1.5" x2="4" y2="18.5" class="icon-stroke"></line>
+              <line x1="10" y1="1.5" x2="10" y2="18.5" class="icon-stroke"></line>
+              <line x1="16" y1="1.5" x2="16" y2="18.5" class="icon-stroke"></line>
+              <circle cx="4" cy="6.5" r="2.1" class="icon-fill"></circle>
+              <circle cx="10" cy="13.5" r="2.1" class="icon-fill"></circle>
+              <circle cx="16" cy="9" r="2.1" class="icon-fill"></circle>
             </g>
             <!-- Icon: cloud (AWS) -->
             <g id="icon-cloud">
@@ -345,12 +364,17 @@
 
           <!-- lane labels -->
           <text x="80" y="30" text-anchor="middle" class="lane-label">setup</text>
+          <text x="280" y="30" text-anchor="middle" class="lane-label">configure</text>
           <text x="680" y="30" text-anchor="middle" class="lane-label">parallel collection</text>
           <text x="1110" y="30" text-anchor="middle" class="lane-label">reporting</text>
 
-          <!-- connectors: stage1 -> stage2 -> stage3 -->
-          <path class="flow-line" marker-end="url(#arrow-atpar)" d="M150,210 H196"></path>
-          <path class="flow-line" marker-end="url(#arrow-atpar)" d="M340,210 H386"></path>
+          <!-- fan-out: stage1 -> data snapshot + dynamic load config -->
+          <path class="flow-line" marker-end="url(#arrow-atpar)" d="M150,210 H180 V141 H196"></path>
+          <path class="flow-line" marker-end="url(#arrow-atpar)" d="M150,210 H180 V279 H196"></path>
+
+          <!-- converge: data snapshot + dynamic load config -> load simulation -->
+          <path class="flow-line" marker-end="url(#arrow-atpar)" d="M360,141 H380 V210 H386"></path>
+          <path class="flow-line" marker-end="url(#arrow-atpar)" d="M360,279 H380 V210 H386"></path>
 
           <!-- fan-out: stage3 -> 3 collectors -->
           <path class="flow-line" marker-end="url(#arrow-atpar)" d="M540,210 H570 V92 H596"></path>
@@ -375,11 +399,17 @@
           <text x="80" y="222" text-anchor="middle" class="box-label">Provision Infra</text>
           <text x="80" y="236" text-anchor="middle" class="box-sub">capacity check</text>
 
-          <!-- Stage 2: Data Snapshot -->
-          <rect class="node-rect" x="200" y="175" width="140" height="70" rx="10"></rect>
-          <use href="#icon-db" x="210" y="185" width="20" height="20"></use>
-          <text x="270" y="222" text-anchor="middle" class="box-label">Data Snapshot</text>
-          <text x="270" y="236" text-anchor="middle" class="box-sub">match customer load</text>
+          <!-- Stage 2a: Data Snapshot -->
+          <rect class="node-rect" x="200" y="110" width="160" height="62" rx="10"></rect>
+          <use href="#icon-db" x="212" y="119" width="20" height="20"></use>
+          <text x="280" y="154" text-anchor="middle" class="box-label">Data Snapshot</text>
+          <text x="280" y="167" text-anchor="middle" class="box-sub">match customer load</text>
+
+          <!-- Stage 2b: Dynamic Load Config -->
+          <rect class="node-rect" x="200" y="248" width="160" height="62" rx="10"></rect>
+          <use href="#icon-sliders" x="212" y="257" width="20" height="20"></use>
+          <text x="280" y="292" text-anchor="middle" class="box-label">Dynamic Load Config</text>
+          <text x="280" y="305" text-anchor="middle" class="box-sub">attached to JMeter plan</text>
 
           <!-- Stage 3: Load Simulation -->
           <rect class="node-rect accented" x="390" y="175" width="150" height="70" rx="10"></rect>
@@ -428,7 +458,7 @@
           <text x="1285" y="312" text-anchor="middle" class="box-label">Email Report</text>
         </svg>
       </div>
-      <figcaption>ATPAR provisions and validates infra and data, drives load with JMeter, collects infra, trace, and log signals from AWS, Datadog, and Splunk in parallel, then consolidates, benchmarks, and reports the result automatically.</figcaption>
+      <figcaption>ATPAR provisions infra, then in parallel validates a customer-matched data snapshot and dynamically computes the load profile attached to the JMeter test plan. It drives load with JMeter, collects infra, trace, and log signals from AWS, Datadog, and Splunk in parallel, then consolidates, benchmarks, and reports the result automatically.</figcaption>
     </figure>
     </div></div>
   </section>
@@ -453,8 +483,15 @@
       <li>
         <span class="step-num"></span>
         <div>
+          <p class="step-title">Configures load dynamically</p>
+          <p class="step-body">Computes the load profile — concurrency, ramp-up, and throughput targets — for the release under test and attaches it directly to the JMeter test plan, so no test script is hand-edited between runs.</p>
+        </div>
+      </li>
+      <li>
+        <span class="step-num"></span>
+        <div>
           <p class="step-title">Simulates load</p>
-          <p class="step-body">Drives traffic against the target APIs using JMeter test plans tuned to the release under test.</p>
+          <p class="step-body">Drives traffic against the target APIs using the JMeter test plan, now carrying its dynamically attached load configuration.</p>
         </div>
       </li>
       <li>
@@ -496,12 +533,30 @@
         <span class="stat-label">Tools coordinated manually, replaced by one run</span>
       </div>
       <div class="stat-tile">
-        <span class="stat-num">Days → 1 click</span>
-        <span class="stat-label">Time from "start a perf test" to results in hand</span>
+        <span class="stat-num">3 days → 10 min</span>
+        <span class="stat-label">Time to go from raw signals to a "why did it slow down" answer — now the same length as the test run itself</span>
       </div>
       <div class="stat-tile">
         <span class="stat-num">Monthly</span>
         <span class="stat-label">Rolling benchmark every API is automatically checked against</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where it plugs in</h2>
+    <div class="stats usecase-grid">
+      <div class="stat-tile usecase-tile">
+        <span class="usecase-title">Live API SLA baselines</span>
+        <span class="usecase-body">Every API's performance baseline stays current against real load, instead of a one-off benchmark that quietly goes stale.</span>
+      </div>
+      <div class="stat-tile usecase-tile">
+        <span class="usecase-title">Nightly regression gating</span>
+        <span class="usecase-body">Nightly regression runs are checked against the rolling baseline automatically, before anyone has to go looking for a slowdown.</span>
+      </div>
+      <div class="stat-tile usecase-tile">
+        <span class="usecase-title">Feature-branch merge gating</span>
+        <span class="usecase-body">A branch that regresses an API's performance beyond threshold is flagged at merge time, not discovered after release.</span>
       </div>
     </div>
   </section>
